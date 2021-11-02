@@ -4,6 +4,7 @@ from digiskr.parser import LineParser
 import re
 import time
 from digiskr.pskreporter import PskReporter
+from digiskr.telnetcluster import TelnetCluster
 from digiskr.base import AudioDecoderProfile
 from digiskr.config import Config
 from abc import ABC, ABCMeta, abstractmethod
@@ -184,6 +185,7 @@ class WsjtParser(LineParser):
                 if "mode" in out:
                     if "callsign" in out and "locator" in out:
                         PskReporter.getSharedInstance(self.getStation()).spot(out)
+                        TelnetCluster.getSharedInstance(self.getStation()).spot(out)
                         # upload beacons to wsprnet as well
                         if out["mode"] in ["WSPR", "FST4W"]:
                             Wsprnet.getSharedInstance(self.getStation()).spot(out)

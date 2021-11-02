@@ -10,6 +10,7 @@ from kiwi import KiwiWorker
 import timespan
 from digiskr import config, DecoderQueue
 from digiskr.pskreporter import PskReporter
+from digiskr.telnetcluster import TelnetCluster
 from digiskr.wsprnet import Wsprnet
 from digiskr.audio import WsjtSoundRecorder
 import logging
@@ -130,6 +131,7 @@ def new_kiwiworker(o, band_hops_str, idx):
 def cleanup():
     _run_event.clear()
     PskReporter.stop()
+    TelnetCluster.stop()
     Wsprnet.stop()
     [w.stop() for w in DecoderQueue.instance().workers]
     [r.stop() for r in _sr_tasks]

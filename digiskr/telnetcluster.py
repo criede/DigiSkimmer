@@ -8,12 +8,13 @@ import random
 import socket
 from functools import reduce
 from operator import and_
+from telnetlib import Telnet
 
 
 def _modes(d): return dict([(v, k) for (k, v) in d.items()])
 
 
-class PskReporter(object):
+class TelnetCluster(object):
     sharedInstance = {}
     creationLock = threading.Lock()
     interval = 15
@@ -22,14 +23,14 @@ class PskReporter(object):
 
     @staticmethod
     def getSharedInstance(station: str):
-        with PskReporter.creationLock:
-            if PskReporter.sharedInstance.get(station) is None:
-                PskReporter.sharedInstance[station] = PskReporter(station)
-        return PskReporter.sharedInstance[station]
+        with TelnetCluster.creationLock:
+            if TelnetCluster.sharedInstance.get(station) is None:
+                TelnetCluster.sharedInstance[station] = TelnetCluster(station)
+        return TelnetCluster.sharedInstance[station]
 
     @staticmethod
     def stop():
-        [psk.cancelTimer() for psk in PskReporter.sharedInstance.values()]
+        [telnet.cancelTimer() for telnet in TelnetCluster.sharedInstance.values()]
 
     def __init__(self, station: str):
         self.spots = []
@@ -40,17 +41,17 @@ class PskReporter(object):
 
         # prepare logdir for uploader
         self.logdir = os.path.join(
-            Config.logdir(), "spots", "pskreport", station)
+            Config.logdir(), "spots", "telnet", station)
         os.makedirs(self.logdir, exist_ok=True)
 
     def scheduleNextUpload(self):
         if self.timer:
             return
-        delay = PskReporter.interval + random.uniform(0, 15)
+        delay = TelnetCluster.interval + random.uniform(0, 15)
         logging.info(
-            "scheduling next pskreporter upload in %3.2f seconds", delay)
+            "scheduling next telnet upload in %3.2f seconds", delay)
         self.timer = threading.Timer(delay, self.upload)
-        self.timer.setName("psk.uploader-%s" % self.station)
+        self.timer.setName("telnet.uploader-%s" % self.station)
         self.timer.start()
 
     def spotEquals(self, s1, s2):
@@ -60,7 +61,7 @@ class PskReporter(object):
         return reduce(and_, map(lambda key: s1[key] == s2[key], keys))
 
     def spot(self, spot):
-        if not spot["mode"] in PskReporter.supportedModes.keys():
+        if not spot["mode"] in TelnetCluster.supportedModes.keys():
             return
         with self.spotLock:
             if any(x for x in self.spots if self.spotEquals(spot, x)):
@@ -90,7 +91,7 @@ class PskReporter(object):
                 ("%2.1f" % s["db"]).rjust(5, " "),
                 ("%2.1f" % s["dt"]).rjust(5, " "),
                 ("%2.6f" % s["freq"]).rjust(10, " "),
-                PskReporter.supportedModes[s["mode"]],
+                TelnetCluster.supportedModes[s["mode"]],
                 s["callsign"].ljust(6, " "),
                 s["locator"]
             ))
@@ -121,8 +122,17 @@ class Uploader(object):
 
     def upload(self, spots):
         logging.warning("uploading %i spots               ", len(spots))
-        for packet in self.getPackets(spots):
-            self.socket.sendto(packet, ("report.pskreporter.info", 4739))
+        #print(spots)
+        #for packet in self.getPackets(spots):
+        with Telnet('criede-fst-gw01',1234) as tn:
+            tn.read_until(b"login: ",timeout=2)
+            tn.write(b"0di2skim\n")
+            for s in spots:
+              print(s)
+              msg=b"dx "+bytes(s['callsign'],'utf-8')+b" "+bytes(str(s['freq']),' utf-8')+b"  "+bytes(s['mode'],'utf-8')+b"\n"
+              print(msg)
+              tn.write(msg)
+            tn.close
 
     def getPackets(self, spots):
         encoded = [self.encodeSpot(spot) for spot in spots]
@@ -166,7 +176,7 @@ class Uploader(object):
         try:
             return bytes(
                 self.encodeString(spot["callsign"])
-                # freq in Hz to pskreporter
+                # freq in Hz to telnet
                 + list(int(spot["freq"]*1e6).to_bytes(4, "big"))
                 + list(int(spot["db"]).to_bytes(1, "big", signed=True))
                 + self.encodeString(spot["mode"])
@@ -176,7 +186,7 @@ class Uploader(object):
                 + list(spot["timestamp"].to_bytes(4, "big"))
             )
         except Exception:
-            logging.exception("Error while encoding spot for pskreporter")
+            logging.exception("Error while encoding spot for telnet")
             return None
         
 
