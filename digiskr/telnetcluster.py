@@ -126,12 +126,14 @@ class Uploader(object):
         #for packet in self.getPackets(spots):
         with Telnet('criede-fst-gw01',1234) as tn:
             tn.read_until(b"login: ",timeout=2)
-            tn.write(b"0di2skim\n")
+            tn.write(b"dk0bt-0\n")
+            logging.warning(tn.read_until(b">").decode('ascii'))
             for s in spots:
-              print(s)
-              msg=b"dx "+bytes(s['callsign'],'utf-8')+b" "+bytes(str(s['freq']),' utf-8')+b"  "+bytes(s['mode'],'utf-8')+b"\n"
-              print(msg)
+              #print(s)
+              msg=b"dx " +bytes(str(s['freq']*1000),' utf-8')+b"  " +bytes(s['callsign'],'utf-8')+b" " +bytes(s['mode'],'utf-8')+b"\r\n"
+              logging.warning(msg)
               tn.write(msg)
+              logging.warning(tn.read_until(b">").decode('ascii'))
             tn.close
 
     def getPackets(self, spots):
