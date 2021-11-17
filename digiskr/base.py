@@ -275,7 +275,7 @@ class BaseSoundRecorder(KiwiSDRStream, metaclass=ABCMeta):
 
     def _print_status(self, time_to_wait):
         # position of modes at status bar
-        pos = {"FT8": 0, "FT4": 1, "WSPR": 2, "JT65": 3, "JT9": 4, "FST4W": 5}
+        pos = {"FT8": 0, "FT4": 1, "WSPR": 2, "JT65": 3, "JT9": 4, "FST4W": 5, "FT8W": 6, "FT4W" : 7}
         tab = "  " +"".join(["\t" for _ in range(0, 2*pos[self._profile.getMode()])])
 
         # progress of modes

@@ -33,6 +33,10 @@ class WsjtProfile(AudioDecoderProfile, metaclass=ABCMeta):
             return FT8Profile()
         elif mode == "FT4":
             return FT4Profile()
+        if mode == "FT8W":
+            return FT8WProfile()
+        elif mode == "FT4W":
+            return FT4WProfile()
         elif mode == "WSPR":
             return WsprProfile()
         elif mode == "JT65":
@@ -58,6 +62,19 @@ class FT8Profile(WsjtProfile):
     def decoder_commandline(self, file):
         return ["jt9", "--ft8", "-d", str(self.decoding_depth(self.getMode())), file]
 
+class FT8WProfile(WsjtProfile):
+    def getMode(self):
+        return "FT8W"
+
+    def getInterval(self):
+        return 15
+
+    def getFileTimestampFormat(self):
+        return "%y%m%d_%H%M%S"
+
+    def decoder_commandline(self, file):
+        return ["jt9", "--ft8", "-H", "9000", "-d", str(self.decoding_depth(self.getMode())), file]
+
 
 class FT4Profile(WsjtProfile):
     def getMode(self):
@@ -71,6 +88,19 @@ class FT4Profile(WsjtProfile):
 
     def decoder_commandline(self, file):
         return ["jt9", "--ft4", "-d", str(self.decoding_depth(self.getMode())), file]
+
+class FT4WProfile(WsjtProfile):
+    def getMode(self):
+        return "FT4W"
+
+    def getInterval(self):
+        return 7.5
+
+    def getFileTimestampFormat(self):
+        return "%y%m%d_%H%M%S"
+
+    def decoder_commandline(self, file):
+        return ["jt9", "--ft4", "-H", "9000", "-d", str(self.decoding_depth(self.getMode())), file]
 
 
 class WsprProfile(WsjtProfile):
@@ -207,7 +237,7 @@ class Decoder(ABC):
 
 
 class JT9Decoder(Decoder):
-    jt9_modes = {"~": "FT8", "#": "JT65", "@": "JT9", "+": "FT4", "`": "FST4W"}
+    jt9_modes = {"~": "FT8", "#": "JT65", "@": "JT9", "+": "FT4", "`": "FST4W", "%": "FT8W", "^": "FT4W"}
     # CQ DX BD7MQB OM92
     locator_pattern = re.compile(
         ".+[A-Z0-9/]+\s([A-Z0-9/]+?)\s([A-R]{2}[0-9]{2})$")

@@ -108,8 +108,6 @@ def new_kiwiworker(o, band_hops_str, idx):
 
         freq_hops=[]
         for i, b in enumerate(band_hops):
-            print(config.BANDS[mode_hops[i]])
-            print(type(config.BANDS[mode_hops[i]]))
             if b in config.BANDS[mode_hops[i]]:
                 freq_hops.append(config.BANDS[mode_hops[i]][b]*1000.0)
             else:
