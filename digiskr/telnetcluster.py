@@ -131,7 +131,7 @@ class Uploader(object):
             for s in spots:
               #print(s)
               msg=b"dx " +bytes(str(s['freq']*1000),' utf-8')+b"  " +bytes(s['callsign'],'utf-8')+b" " +bytes(s['mode'],'utf-8')+b"\r\n"
-              logging.warning(msg)
+              #logging.warning(msg)
               tn.write(msg)
               logging.warning(tn.read_until(b">").decode('ascii'))
             tn.close
